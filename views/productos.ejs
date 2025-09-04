@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos - Mi Comercio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark bg-success shadow px-3">
+    <a class="navbar-brand fw-bold" href="#"><i class="bi bi-shop me-2"></i> Mi Comercio</a>
+    <div class="d-flex">
+      <a href="/logout" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a>
+    </div>
+  </nav>
+
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <div class="bg-dark text-white vh-100 p-3" style="width: 250px;">
+      <h5 class="mb-4">Menú</h5>
+      <ul class="nav flex-column">
+        <li class="nav-item mb-2"><a href="/dashboard" class="nav-link text-white"><i
+              class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
+        <li class="nav-item mb-2"><a href="/ventas" class="nav-link text-white"><i class="bi bi-cash-stack me-2"></i>
+            Ventas</a></li>
+        <li class="nav-item mb-2"><a href="/gastos" class="nav-link text-white"><i class="bi bi-cart-dash me-2"></i>
+            Gastos</a></li>
+        <li class="nav-item mb-2"><a href="/categorias" class="nav-link text-white"><i class="bi bi-tags me-2"></i>
+            Categorías</a></li>
+        <li class="nav-item mb-2"><a href="/productos" class="nav-link text-white"><i class="bi bi-box-seam me-2"></i>
+            Productos</a></li>
+        <li class="nav-item mb-2"><a href="/arqueo" class="nav-link text-white"><i class="bi bi-wallet2 me-2"></i>
+            Arqueo de Caja</a></li>
+      </ul>
+    </div>
+
+    <!-- Contenido -->
+    <div class="container-fluid p-4">
+      <h2 class="mb-4"><i class="bi bi-box-seam text-success me-2"></i> Gestión de Productos</h2>
+
+      <!-- Nuevo producto -->
+      <div class="card shadow border-0 mb-4">
+        <div class="card-header bg-success text-white"><i class="bi bi-plus-circle me-2"></i> Nuevo Producto</div>
+        <div class="card-body">
+          <form action="/productos" method="POST" class="row g-3">
+            <div class="col-md-4">
+              <label for="nombre" class="form-label">Nombre</label>
+              <input type="text" class="form-control" name="nombre" required>
+            </div>
+            <div class="col-md-2">
+              <label for="precio" class="form-label">Precio</label>
+              <input type="number" class="form-control" name="precio" step="0.01" required>
+            </div>
+            <div class="col-md-2">
+              <label for="tipo_venta" class="form-label">Tipo de venta</label>
+              <select name="tipo_venta" class="form-select" required>
+                <option value="unidad">Unidad</option>
+                <option value="kg">Kg</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="id_categoria" class="form-label">Categoría</label>
+              <select name="id_categoria" class="form-select" required>
+                <% categorias.forEach(c=> { %>
+                  <option value="<%= c.id %>">
+                    <%= c.nombre %>
+                  </option>
+                  <% }) %>
+              </select>
+            </div>
+            <div class="col-md-12 d-flex justify-content-end">
+              <button type="submit" class="btn btn-success"><i class="bi bi-check2-circle me-1"></i> Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="card shadow border-0">
+        <div class="card-header bg-dark text-white"><i class="bi bi-list-ul me-2"></i> Lista de Productos</div>
+        <div class="card-body table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Tipo</th>
+                <th>Categoría</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (productos && productos.length> 0) { %>
+                <% productos.forEach(p=> { %>
+                  <tr>
+                    <td>
+                      <%= p.id %>
+                    </td>
+                    <td>
+                      <%= p.nombre %>
+                    </td>
+                    <td>$<%= Number(p.precio).toFixed(2) %>
+                    </td>
+                    <td>
+                      <%= p.tipo_venta %>
+                    </td>
+                    <td>
+                      <%= p.categoria %>
+                    </td>
+                    <td>
+                      <a href="/productos/delete/<%= p.id %>" class="btn btn-danger btn-sm"
+                        onclick="return confirm('¿Eliminar producto?')">
+                        <i class="bi bi-trash"></i>
+                      </a>
+                    </td>
+                  </tr>
+                  <% }) %>
+                    <% } else { %>
+                      <tr>
+                        <td colspan="6" class="text-center">No hay productos registrados</td>
+                      </tr>
+                      <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const mensaje = "<%= mensaje ? mensaje : '' %>";
+    if (mensaje) {
+      Swal.fire({
+        position: 'top-end',
+        icon: 'success',
+        title: mensaje,
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }
+  </script>
+</body>
+
+</html>

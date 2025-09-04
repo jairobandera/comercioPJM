@@ -1,0 +1,17 @@
+body {
+  background: linear-gradient(135deg, #d4fc79, #96e6a1);
+}
+
+.card {
+  border-radius: 1rem;
+}
+
+.btn-success {
+  background: #28a745;
+  border: none;
+  transition: 0.3s ease;
+}
+
+.btn-success:hover {
+  background: #218838;
+}
