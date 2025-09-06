@@ -236,3 +236,29 @@ exports.exportarPDF = (req, res) => {
     doc.end();
   });
 };
+
+// Obtener última venta con detalles
+exports.obtenerUltimaVenta = (callback) => {
+  const sqlVenta = `SELECT * FROM ventas ORDER BY fecha DESC LIMIT 1`;
+
+  db.query(sqlVenta, (err, ventas) => {
+    if (err) return callback(err, null);
+    if (ventas.length === 0) return callback(null, null);
+
+    const ultimaVenta = ventas[0];
+
+    const sqlDetalles = `
+      SELECT dv.*, p.nombre AS producto
+      FROM detalle_venta dv
+      JOIN productos p ON dv.id_producto = p.id
+      WHERE dv.id_venta = ?
+    `;
+
+    db.query(sqlDetalles, [ultimaVenta.id], (err2, detalles) => {
+      if (err2) return callback(err2, null);
+
+      ultimaVenta.detalles = detalles;
+      callback(null, ultimaVenta);
+    });
+  });
+};

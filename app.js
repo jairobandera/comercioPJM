@@ -21,7 +21,12 @@ app.use(express.json());
 app.use(session({
     secret: 'secreto123',
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: false, // 👈 evita sesiones vacías
+    rolling: true,
+    cookie: {
+        maxAge: 1000 * 60 * 60, // 👈 1 hora
+        sameSite: 'lax'
+    }
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -29,52 +34,69 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Rutas
-app.use('/', authRoutes);
-
 // Middleware de protección
 function isAuthenticated(req, res, next) {
-    if (req.session.user) return next();
+    if (req.session.user) {
+        return next();
+    }
     res.redirect('/');
 }
 
-// ✅ Dashboard protegido (solo una vez)
+// Rutas públicas (solo login/logout)
+app.use('/', authRoutes);
+
+// Rutas protegidas
 app.get('/dashboard', isAuthenticated, (req, res) => {
-    ventaController.obtenerVentas((err, ventas) => {
-        if (err) ventas = [];
+    const hoy = new Date().toISOString().split("T")[0];
 
-        db.query(`
-            SELECT p.id, p.nombre, p.precio, c.nombre AS categoria, p.tipo_venta
-            FROM productos p
-            JOIN categorias c ON p.id_categoria = c.id
-        `, (err, productos) => {
-            if (err) productos = [];
+    const sqlVentasDia = `SELECT IFNULL(SUM(total),0) AS totalVentas FROM ventas WHERE DATE(fecha) = ?`;
+    const sqlGastosDia = `SELECT IFNULL(SUM(monto),0) AS totalGastos FROM gastos WHERE DATE(fecha) = ?`;
 
-            // Guardar valores en variables locales ANTES de limpiar la sesión
-            const mensaje = req.session.mensaje || null;
-            const ticketUrl = req.session.ticketUrl || null;
+    db.query(sqlVentasDia, [hoy], (err1, ventasDia) => {
+        const totalVentas = ventasDia && ventasDia[0] ? ventasDia[0].totalVentas : 0;
 
-            // Limpiar la sesión
-            req.session.mensaje = null;
-            req.session.ticketUrl = null;
+        db.query(sqlGastosDia, [hoy], (err2, gastosDia) => {
+            const totalGastos = gastosDia && gastosDia[0] ? gastosDia[0].totalGastos : 0;
 
-            // Pasar los valores a la vista
-            res.render('dashboard', {
-                user: req.session.user,
-                ventas,
-                productos,
-                mensaje,
-                ticketUrl
+            ventaController.obtenerVentas((err, ventas) => {
+                if (err) ventas = [];
+
+                db.query(`
+                  SELECT p.id, p.nombre, p.precio, c.nombre AS categoria
+                  FROM productos p
+                  JOIN categorias c ON p.id_categoria = c.id
+                `, (err2, productos) => {
+                    if (err2) productos = [];
+
+                    ventaController.obtenerUltimaVenta((err3, ultimaVenta) => {
+                        if (err3) ultimaVenta = null;
+
+                        res.render('dashboard', {
+                            user: req.session.user,
+                            ventas,
+                            productos,
+                            ultimaVenta,
+                            totalVentas,
+                            totalGastos,
+                            mensaje: req.session.mensaje || null,
+                            ticketUrl: req.session.ticketUrl || null
+                        });
+
+                        req.session.mensaje = null;
+                        req.session.ticketUrl = null;
+                    });
+                });
             });
         });
     });
 });
 
-app.use('/categorias', categoriaRoutes);
-app.use('/productos', productoRoutes);
-app.use('/ventas', ventaRoutes);
-app.use('/gastos', gastoRoutes);
-app.use('/arqueo', arqueoRoutes);
+// 👇 Aplica protección a todos los módulos
+app.use('/categorias', isAuthenticated, categoriaRoutes);
+app.use('/productos', isAuthenticated, productoRoutes);
+app.use('/ventas', isAuthenticated, ventaRoutes);
+app.use('/gastos', isAuthenticated, gastoRoutes);
+app.use('/arqueo', isAuthenticated, arqueoRoutes);
 
 // Inicializar admin automáticamente
 initAdminUser();

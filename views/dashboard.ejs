@@ -52,27 +52,143 @@
 
     <div class="d-flex">
         <!-- Sidebar -->
-        <div class="bg-dark text-white vh-100 p-3" style="width: 250px;">
+        <div class="sidebar bg-dark text-white vh-100 p-3">
             <h5 class="mb-4">Menú</h5>
             <ul class="nav flex-column">
-                <li class="nav-item mb-2"><a href="/dashboard" class="nav-link text-white"><i
-                            class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
-                <li class="nav-item mb-2"><a href="/ventas" class="nav-link text-white"><i
-                            class="bi bi-cash-stack me-2"></i> Ventas</a></li>
-                <li class="nav-item mb-2"><a href="/gastos" class="nav-link text-white"><i
-                            class="bi bi-cart-dash me-2"></i> Gastos</a></li>
-                <li class="nav-item mb-2"><a href="/categorias" class="nav-link text-white"><i
-                            class="bi bi-tags me-2"></i> Categorías</a></li>
-                <li class="nav-item mb-2"><a href="/productos" class="nav-link text-white"><i
-                            class="bi bi-box-seam me-2"></i> Productos</a></li>
-                <li class="nav-item mb-2"><a href="/arqueo" class="nav-link text-white"><i
-                            class="bi bi-wallet2 me-2"></i> Arqueo de Caja</a></li>
+                <li class="nav-item mb-3">
+                    <a href="/dashboard" class="nav-link text-white fs-5">
+                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item mb-3">
+                    <a href="/ventas" class="nav-link text-white fs-5">
+                        <i class="bi bi-cash-stack me-2"></i> Ventas
+                    </a>
+                </li>
+                <li class="nav-item mb-3">
+                    <a href="/gastos" class="nav-link text-white fs-5">
+                        <i class="bi bi-cart-dash me-2"></i> Gastos
+                    </a>
+                </li>
+                <li class="nav-item mb-3">
+                    <a href="/categorias" class="nav-link text-white fs-5">
+                        <i class="bi bi-tags me-2"></i> Categorías
+                    </a>
+                </li>
+                <li class="nav-item mb-3">
+                    <a href="/productos" class="nav-link text-white fs-5">
+                        <i class="bi bi-box-seam me-2"></i> Productos
+                    </a>
+                </li>
+                <li class="nav-item mb-3">
+                    <a href="/arqueo" class="nav-link text-white fs-5">
+                        <i class="bi bi-wallet2 me-2"></i> Arqueo de Caja
+                    </a>
+                </li>
             </ul>
         </div>
 
         <!-- Contenido principal -->
         <div class="container-fluid p-4">
             <h2 class="mb-4">Bienvenido, Administrador 👋</h2>
+
+            <!-- Encabezado con cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card text-white bg-success shadow">
+                        <div class="card-body text-center">
+                            <i class="bi bi-cash-stack display-5"></i>
+                            <h5 class="mt-2">Ventas del Día</h5>
+                            <h3>$<%= totalVentas.toFixed(2) %>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card text-white bg-danger shadow">
+                        <div class="card-body text-center">
+                            <i class="bi bi-cart-dash display-5"></i>
+                            <h5 class="mt-2">Gastos del Día</h5>
+                            <h3>$<%= totalGastos.toFixed(2) %>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card text-white bg-primary shadow" style="cursor:pointer" data-bs-toggle="modal"
+                        data-bs-target="#ultimaVentaModal">
+                        <div class="card-body text-center">
+                            <i class="bi bi-receipt display-5"></i>
+                            <h5 class="mt-2">Última Venta</h5>
+                            <h3>$<%= ultimaVenta ? ultimaVenta.total.toFixed(2) : "0.00" %>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Última Venta -->
+            <div class="modal fade" id="ultimaVentaModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title"><i class="bi bi-receipt"></i> Detalle Última Venta</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <% if (ultimaVenta) { %>
+                                <p><strong>ID Venta:</strong>
+                                    <%= ultimaVenta.id %>
+                                </p>
+                                <p><strong>Fecha:</strong>
+                                    <%= ultimaVenta.fecha.toLocaleString() %>
+                                </p>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Cantidad</th>
+                                            <th>Precio</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% ultimaVenta.detalles.forEach(d=> { %>
+                                            <tr>
+                                                <td>
+                                                    <%= d.producto %>
+                                                </td>
+                                                <td>
+                                                    <%= d.cantidad %>
+                                                </td>
+                                                <td>$<%= d.precio.toFixed(2) %>
+                                                </td>
+                                                <td>$<%= d.subtotal.toFixed(2) %>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                                    </tbody>
+                                </table>
+                                <h4 class="text-end">TOTAL: $<%= ultimaVenta.total.toFixed(2) %>
+                                </h4>
+                                <% } else { %>
+                                    <p>No hay ventas registradas aún.</p>
+                                    <% } %>
+                        </div>
+                        <div class="modal-footer">
+                            <% if (ultimaVenta) { %>
+                                <a href="/ventas/ticket/<%= ultimaVenta.id %>" target="_blank" class="btn btn-success">
+                                    <i class="bi bi-printer"></i> Imprimir Ticket
+                                </a>
+                                <% } %>
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Nueva Venta -->
             <div class="card shadow border-0">

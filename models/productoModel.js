@@ -2,33 +2,56 @@ const db = require('../config/db');
 
 const Producto = {
   getAll: (callback) => {
-    const sql = `
-      SELECT p.id, p.nombre, p.precio, p.tipo_venta, c.nombre AS categoria
-      FROM productos p
-      JOIN categorias c ON p.id_categoria = c.id
-      ORDER BY p.id DESC
-    `;
-    db.query(sql, callback);
-  },
-  create: (nombre, precio, tipo_venta, id_categoria, callback) => {
     db.query(
-      'INSERT INTO productos (nombre, precio, tipo_venta, id_categoria) VALUES (?, ?, ?, ?)',
-      [nombre, precio, tipo_venta, id_categoria],
+      `SELECT p.*, c.nombre AS categoria 
+       FROM productos p 
+       JOIN categorias c ON p.id_categoria = c.id 
+       WHERE p.activo = 1 
+       ORDER BY p.id DESC`,
       callback
     );
   },
-  delete: (id, callback) => {
-    db.query('DELETE FROM productos WHERE id = ?', [id], callback);
+
+  create: (nombre, precio, id_categoria, tipo_venta, callback) => {
+    db.query(
+      `INSERT INTO productos (nombre, precio, id_categoria, tipo_venta, activo) 
+       VALUES (?, ?, ?, ?, 1)`,
+      [nombre, precio, id_categoria, tipo_venta],
+      callback
+    );
   },
+
+  // ahora "delete" desactiva
+  delete: (id, callback) => {
+    db.query(
+      `UPDATE productos SET activo = 0 WHERE id = ?`,
+      [id],
+      callback
+    );
+  },
+
+  findByName: (nombre, callback) => {
+    db.query("SELECT * FROM productos WHERE nombre = ?", [nombre], callback);
+  },
+
   buscar: (q, callback) => {
-    const sql = `
-    SELECT p.id, p.nombre, p.precio, p.tipo_venta, c.nombre AS categoria
-    FROM productos p
-    JOIN categorias c ON p.id_categoria = c.id
-    WHERE p.nombre LIKE ? OR c.nombre LIKE ?
-    LIMIT 10
-  `;
-    db.query(sql, [`%${q}%`, `%${q}%`], callback);
+    db.query(
+      `SELECT p.*, c.nombre AS categoria 
+       FROM productos p 
+       JOIN categorias c ON p.id_categoria = c.id 
+       WHERE p.activo = 1 
+       AND (p.nombre LIKE ? OR c.nombre LIKE ?)`,
+      [`%${q}%`, `%${q}%`],
+      callback
+    );
+  },
+
+  reactivate: (id, nombre, precio, id_categoria, tipo_venta, callback) => {
+    db.query(
+      "UPDATE productos SET activo = 1, nombre=?, precio=?, id_categoria=?, tipo_venta=? WHERE id=?",
+      [nombre, precio, id_categoria, tipo_venta, id],
+      callback
+    );
   }
 };
 
